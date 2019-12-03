@@ -1,0 +1,7 @@
+node_modules
+.env
+.eslintrc.js
+**/*.md
+*.sh
+docker-compose.yml
+Dockerfile

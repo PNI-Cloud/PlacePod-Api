@@ -1,0 +1,333 @@
+# PlacePod API swagger document.
+openapi: "3.0.2"
+
+
+# Base info
+info:
+  title: "PlacePod Admin API"
+  description: "Internal Admin API. All methods require admin access."
+  version: "1.0.0"
+
+servers:
+ - url: "http://localhost:3000/api/v1"
+
+# Assume global security on all methods unless specifically noted.
+security:
+  - "bearerToken": []
+  
+
+# Method groups
+tags:
+  - name: "Client"
+    description: "Client operations."
+    
+# Methods
+paths:
+
+# -- Start Clients --
+  "/clients":
+    get:
+      tags: ["Client"]
+      
+      summary: "Get all Clients."
+      description: ""
+      operationId: "GetClients"
+
+      parameters:
+      - $ref: "#/components/parameters/scope"
+      
+      responses:
+        "200":
+          description: "Success"
+          content:
+            "application/json":
+              schema:
+                $ref: '#/components/schemas/clients'
+
+        "401":
+          $ref: '#/components/schemas/unauthorized'
+        "403":
+          $ref: '#/components/schemas/forbidden'
+    
+    post:
+      tags: ["Client"]
+
+      summary: "Create a new Client."
+      description: ""
+      operationId: "CreateClient"
+      
+      requestBody:
+        content:
+          "application/json":
+            schema:
+              $ref: '#/components/schemas/createClient'
+                
+      responses:
+        "200":
+          description: "Success"
+          content:
+            "application/json":
+              schema:
+                $ref: '#/components/schemas/createClientResponse'
+
+        "400":
+          $ref: '#/components/schemas/badRequest'
+        "401":
+          $ref: '#/components/schemas/unauthorized'
+        "403":
+          $ref: '#/components/schemas/forbidden'
+          
+  "/clients/{id}":
+    put:
+      tags: ["Client"]
+      
+      summary: "Update an existing client."
+      description: ""
+      operationId: "UpdateClient"
+      
+      parameters:
+      - name: "id"
+        in: path
+        description: "The unique id of the client."
+        required: true
+        schema:
+          type: string
+      
+      requestBody:
+        content:
+          "application/json":
+            schema:
+              $ref: '#/components/schemas/updateClient'
+                
+      responses:
+        "200":
+          description: "Success"
+          content:
+            "application/json":
+              schema:
+                $ref: '#/components/schemas/responseMessage'
+
+        "400":
+          $ref: '#/components/schemas/badRequest'
+        "401":
+          $ref: '#/components/schemas/unauthorized'
+        "403":
+          $ref: '#/components/schemas/forbidden'
+        "404":
+          $ref: '#/components/schemas/notFound'
+          
+  "/clients/{id}/secret":
+    post:
+      tags: ["Client"]
+      
+      summary: "Generate a new secret for an existing client."
+      description: "* WARNING: The current value will be permanently invalidated.\n* Tokens that were previously created with the old secret will still work."
+      operationId: "CreateClientSecret"
+      
+      parameters:
+      - name: "id"
+        in: path
+        description: "The unique id of the client."
+        required: true
+        schema:
+          type: string
+                
+      responses:
+        "200":
+          description: "Success"
+          content:
+            "application/json":
+              schema:
+                $ref: '#/components/schemas/createClientSecretResponse'
+
+        "400":
+          $ref: '#/components/schemas/badRequest'
+        "401":
+          $ref: '#/components/schemas/unauthorized'
+        "403":
+          $ref: '#/components/schemas/forbidden'
+        "404":
+          $ref: '#/components/schemas/notFound'
+      
+# -- End Clients --
+    
+
+# Define objects.
+components:
+
+
+  # Parameter/response objects.
+  schemas:
+  
+    "createClient":
+      title: "Create Client"
+      type: object
+      properties:
+      
+        "id":
+          type: string
+          description: "The unique id for the new client."
+          example: ""
+
+        "scope":
+          type: string
+          description: "The new client's API scope. Default is 'user'."
+          example: "user"
+          
+        "email":
+          type: string
+          description: "The new client's primary email."
+          example: ""
+          
+        "notes":
+          type: string
+          description: "Other information relating to the new client."
+          example: ""
+
+        "otherEmails":
+          type: array
+          items:
+            type: string
+          description: "Other emails to assoiate with this client."
+          example: []
+          
+        "license":
+          $ref: '#/components/schemas/license'
+        
+      required:
+        - "id"
+        - "scope"
+        
+    "updateClient":
+      title: "Create Client"
+      type: object
+      properties:
+        "email":
+          type: string
+          description: "The existing client's primary email."
+          example: ""
+          
+        "notes":
+          type: string
+          description: "Other information relating to the existing client."
+          example: ""
+
+        "otherEmails":
+          type: array
+          items:
+            type: string
+          description: "Other emails to assoiate with this client."
+          example: null
+          
+        "license":
+          $ref: '#/components/schemas/license'
+        
+    "createClientResponse":
+      title: "Create Client Response"
+      type: object
+      properties:
+        "id":
+          type: string
+          description: "The id of the newly created client."
+        "secret":
+          type: string
+          description: "The secret of the newly created client. Write this down!"
+        "scope":
+          type: string
+          description: "The API scope this client is authorized to use."
+          example: 'client'
+        "license":
+          $ref: '#/components/schemas/license'
+          
+    "createClientSecretResponse":
+      title: "Create Client Secret Response"
+      type: object
+      properties:
+        "id":
+          type: string
+          description: "The id of the newly created client."
+        "secret":
+          type: string
+          description: "The secret of the newly created client. Write this down!"
+
+    "license":
+      title: "License"
+      type: object
+      properties:
+        "isValid":
+          type: boolean
+          description: "Will this client have a valid license?."
+          default: false
+        "validityDate":
+          type: string
+          format: date-time
+          description: "When will the client's license expire?"
+        "freeTrial":
+          type: boolean
+          description: "Is this license a free trial license?"
+          default: false
+          
+    "client":
+      title: "Client"
+      type: object
+      properties:
+        "id":
+          type: string
+          description: "The unique id of the client."
+        "scope":
+          type: string
+          description: "The API scope this client is authorized to use."
+        "email":
+          type: string
+          description: "The client's primary email."
+        "notes":
+          type: string
+          description: "Other information relating to the client."
+        "license":
+          $ref: '#/components/schemas/license'
+          
+    "clients":
+      title: "Clients"
+      type: array
+      uniqueItems: true
+      items:
+        $ref: '#/components/schemas/client'
+
+    "responseMessage":
+      title: "Response Message"
+      type: object
+      properties:
+        "message":
+          type: string
+          description: "Response message from the server."
+    
+    "badRequest":
+      title: "Bad Request"
+      description: "Bad Request"
+    "unauthorized":
+      title: "Unauthorized"
+      description: "Unauthorized"
+    "forbidden":
+      title: "Forbidden"
+      description: "Forbidden"
+    "notFound":
+      title: "Not Found"
+      description: "Not Found"
+      
+  parameters:
+    "scope":
+      name: "scope"
+      in: query
+      description: "Filter for all clients that are assigned the given scope"
+      schema:
+        type: string
+        enum: ["user", "admin"]
+
+
+  # Define what security looks like
+  securitySchemes:
+     "bearerToken":
+      type: http
+      description: "Authorization token to send with request."
+      scheme: bearer
+      bearerFormat: "Bearer 12345"

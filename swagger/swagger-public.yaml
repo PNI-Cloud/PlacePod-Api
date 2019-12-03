@@ -1,0 +1,1488 @@
+# PlacePod API swagger document.
+openapi: "3.0.2"
+
+
+# Base info
+info:
+  title: "PlacePod API"
+  description: "REST services for managing your PlacePod Vehicle Detection Sensor."
+  version: "1.0.0"
+
+servers:
+ - url: "http://localhost:3000/api/v1"
+
+# Assume global security on all methods unless specifically noted.
+security:
+  - "bearerToken": []
+  
+
+# Method groups
+tags:
+  - name: "Lane"
+    description: "Operations related to lanes."
+
+  - name: "OAuth2 Token"
+    description: "Manage authentication tokens."
+    
+  - name: "Parking Lot"
+    description: "Operations related to parking lots."
+    
+  - name: "Sensor"
+    description: "Operations related to the PlacePod sensor."
+    
+  - name: "Sensor Log"
+    description: "Sensor history logs."
+  
+
+# Methods
+paths:
+
+# -- Start Lane --
+  "/lanes":
+    "get":
+      tags: ["Lane"]
+      
+      summary: "Returns a list of all lanes."
+      description: ""
+      operationId: "GetLanes"
+      
+      responses:
+        "200":
+          description: "Success"
+          content:
+            "application/json":
+              schema:
+                $ref: '#/components/schemas/lanes'
+        "400":
+          $ref: '#/components/schemas/badRequest'
+        "401":
+          $ref: '#/components/schemas/unauthorized'
+    "post":
+      tags: ["Lane"]
+      
+      summary: "Create a new lane."
+      description: ""
+      operationId: "CreateLane"
+      
+      requestBody:
+        content:
+          "application/json":
+            schema:
+              $ref: '#/components/schemas/createLane'
+      
+      responses:
+        "200":
+          description: "Success"
+          content:
+            "application/json":
+              schema:
+                $ref: '#/components/schemas/createResponse'
+        "400":
+          $ref: '#/components/schemas/badRequest'
+        "401":
+          $ref: '#/components/schemas/unauthorized'
+          
+  "/lanes/{id}":
+    "get":
+      tags: ["Lane"]
+      summary: "Returns the lane matching the given Id."
+      description: ""
+      operationId: "GetLane"
+      
+      parameters:
+      - name: "id"
+        in: path
+        description: "Id of the lane to get."
+        required: true
+        schema:
+          type: string
+          
+      responses:
+        "200":
+          description: "Success"
+          content:
+            "application/json":
+              schema:
+                $ref: '#/components/schemas/lane'
+        "400":
+          $ref: '#/components/schemas/badRequest'
+        "401":
+          $ref: '#/components/schemas/unauthorized'
+        "404":
+          $ref: '#/components/schemas/notFound'
+          
+    "put":
+      tags: ["Lane"]
+      summary: "Update the lane matching the given Id."
+      description: ""
+      operationId: "UpdateLane"
+      
+      parameters:
+      - name: "id"
+        in: path
+        description: "Id of the lane to update."
+        required: true
+        schema:
+          type: string
+      
+      requestBody:
+        content:
+          "application/json":
+            schema:
+              $ref: '#/components/schemas/updateLane'
+        
+      responses:
+        "200":
+          description: "Success"
+          content:
+            "application/json":
+              schema:
+                $ref: '#/components/schemas/responseMessage'
+        "400":
+          $ref: '#/components/schemas/badRequest'
+        "401":
+          $ref: '#/components/schemas/unauthorized'
+        "404":
+          $ref: '#/components/schemas/notFound'
+          
+    "delete":
+      tags: ["Lane"]
+      summary: "Delete the lane matching the given Id."
+      description: ""
+      operationId: "DeleteLane"
+      
+      parameters:
+      - name: "id"
+        in: path
+        description: "Id of the lane to delete."
+        required: true
+        schema:
+          type: string
+          
+      responses:
+        "200":
+          description: "Success"
+          content:
+            "application/json":
+              schema:
+                $ref: '#/components/schemas/responseMessage'
+        "400":
+          $ref: '#/components/schemas/badRequest'
+        "401":
+          $ref: '#/components/schemas/unauthorized'
+        "404":
+          $ref: '#/components/schemas/notFound'
+          
+
+  "/lanes/{id}/sensors":
+    "get":
+      tags: ["Lane"]
+      summary: "Returns a list of all sensors that belong to the lane matching the given Id."
+      description: ""
+      operationId: "GetSensorsByLane"
+      
+      parameters:
+      - name: "id"
+        in: path
+        description: "Id of the parent lane."
+        required: true
+        schema:
+          type: string
+      
+      - $ref: "#/components/parameters/sensorState"
+      - $ref: "#/components/parameters/sensorType"
+          
+      responses:
+        "200":
+          description: "Success"
+          content:
+            "application/json":
+              schema:
+                $ref: '#/components/schemas/sensors'
+        "400":
+          $ref: '#/components/schemas/badRequest'
+        "401":
+          $ref: '#/components/schemas/unauthorized'
+        "404":
+          $ref: '#/components/schemas/notFound'
+          
+  "/lanes/{id}/sensorlogs":
+      "get":
+        tags: ["Lane"]
+        summary: "Get PlacePod history by date range for all sensors in a lane matching the given Id."
+        description: " - Logs will be returned in descending order.\n - Default filters are a starting time of 4 hours ago, an ending time of now, and a limit of 100 logs.\n - A maximum of 1,000 logs can be returned at once."
+        operationId: "GetSensorLogsByLane"
+        
+        parameters:
+        - name: "id"
+          in: path
+          description: "Id of the lane to get logs for."
+          required: true
+          schema:
+            type: string
+        - $ref: "#/components/parameters/sensorLogStartTime"
+        - $ref: "#/components/parameters/sensorLogEndTime"
+        - $ref: "#/components/parameters/sensorLogLimit"
+            
+        responses:
+          "200":
+            description: "Success"
+            content:
+              "application/json":
+                schema:
+                  $ref: '#/components/schemas/sensorLogs'
+          "400":
+            $ref: '#/components/schemas/badRequest'
+          "401":
+            $ref: '#/components/schemas/unauthorized'
+          "404":
+            $ref: '#/components/schemas/notFound'
+
+# -- End Lane --
+
+# -- Start Oauth2 --
+  "/oauth2tokens":
+    "post":
+      tags: ["OAuth2 Token"]
+      
+      summary: "Generate a new token."
+      description: "Tokens are required for authorized requests."
+      operationId: "GenerateToken"
+      security: [] # This remove security from the given method.
+      
+      requestBody:
+        content:
+          "application/x-www-form-urlencoded":
+            schema:
+              type: object
+              properties:
+                "clientId":
+                  type: string
+                  description: "The unique id of the client."
+                "clientSecret":
+                  type: string
+                  description: "The secret of the client."
+                "validityPeriod":
+                  type: integer
+                  format: uint16
+                  description: "Number of days the token is valid for. Range is 1 to 365. Defaults to 30 days if excluded."
+                  minimum: 1
+                  maximum: 365
+                
+              required: ["clientId", "clientSecret"]
+        
+      responses:
+        "200":
+          description: "Success"
+          content:
+            "application/json":
+              schema:
+                $ref: '#/components/schemas/tokenResponse'
+        "400":
+          $ref: '#/components/schemas/badRequest'
+        "401":
+          $ref: '#/components/schemas/unauthorized'
+
+
+  "/oauth2tokens/{token}":
+    "get":
+      tags: ["OAuth2 Token"]
+      
+      summary: "Retreive info about a token."
+      description: ""
+      operationId: "GetTokenInfo"
+      security: [] # This remove security from the given method.
+      
+      parameters:
+      - name: "token"
+        in: path
+        description: "The token to retreive info about."
+        required: true
+        schema:
+          type: string
+          
+      responses:
+        "200":
+          description: "Success"
+          content:
+            "application/json":
+              schema:
+                $ref: '#/components/schemas/tokenInfo'
+        "400":
+          $ref: '#/components/schemas/badRequest'
+  
+    "delete":
+      tags: ["OAuth2 Token"]
+      summary: "Revoke a token."
+      description: "Tokens will not be useable once revoked."
+      operationId: "RevokeToken"
+      security: [] # This remove security from the given method.
+      
+      parameters:
+      - name: "token"
+        in: path
+        description: "The token to revoke."
+        required: true
+        schema:
+          type: string
+      
+      responses:
+        "200":
+          description: "Success"
+          content:
+            "application/json":
+              schema:
+                $ref: '#/components/schemas/responseMessage'
+        "400":
+          $ref: '#/components/schemas/badRequest'
+
+      
+# -- End Oauth2 --
+
+
+# -- Start ParkingLot
+  "/parkinglots":
+
+    "get":
+      tags: ["Parking Lot"]
+      summary: "Returns a list of all parking lots."
+      description: ""
+      operationId: "GetParkingLots"
+      
+      responses:
+        "200":
+          description: "Success"
+          content:
+            "application/json":
+              schema:
+                $ref: '#/components/schemas/parkingLots'
+        "400":
+          $ref: '#/components/schemas/badRequest'
+        "401":
+          $ref: '#/components/schemas/unauthorized'
+
+    "post":
+      tags: ["Parking Lot"]
+      summary: "Create a new parking lot."
+      description: ""
+      operationId: "CreateLot"
+
+      requestBody:
+        content:
+          "application/json":
+            schema:
+              $ref: '#/components/schemas/createLot'
+      
+      responses:
+        "200":
+          description: "Success"
+          content:
+            "application/json":
+              schema:
+                $ref: '#/components/schemas/createResponse'
+        "400":
+          $ref: '#/components/schemas/badRequest'
+        "401":
+          $ref: '#/components/schemas/unauthorized'
+
+  "/parkinglots/{id}":
+    "get":
+      tags: ["Parking Lot"]
+      summary: "Returns the parking lot matching the given Id."
+      description: ""
+      operationId: "GetParkingLot"
+      
+      parameters:
+      - name: "id"
+        in: path
+        description: "Id of the parking lot to get."
+        required: true
+        schema:
+          type: string
+          
+      responses:
+        "200":
+          description: "Success"
+          content:
+            "application/json":
+              schema:
+                $ref: '#/components/schemas/parkingLot'
+        "400":
+          $ref: '#/components/schemas/badRequest'
+        "401":
+          $ref: '#/components/schemas/unauthorized'
+        "404":
+          $ref: '#/components/schemas/notFound'
+          
+    "put":
+      tags: ["Parking Lot"]
+      summary: "Update the parking lot matching the given Id."
+      description: ""
+      operationId: "UpdateParkingLot"
+      
+      parameters:
+      - name: "id"
+        in: path
+        description: "Id of the parking lot to update."
+        required: true
+        schema:
+          type: string
+      
+      requestBody:
+        content:
+          "application/json":
+            schema:
+              $ref: '#/components/schemas/updateLot'
+        
+      responses:
+        "200":
+          description: "Success"
+          content:
+            "application/json":
+              schema:
+                $ref: '#/components/schemas/responseMessage'
+        "400":
+          $ref: '#/components/schemas/badRequest'
+        "401":
+          $ref: '#/components/schemas/unauthorized'
+        "404":
+          $ref: '#/components/schemas/notFound'
+          
+    "delete":
+      tags: ["Parking Lot"]
+      summary: "Delete the parking lot matching the given Id."
+      description: ""
+      operationId: "DeleteParkingLot"
+      
+      parameters:
+      - name: "id"
+        in: path
+        description: "Id of the parking lot to delete."
+        required: true
+        schema:
+          type: string
+          
+      responses:
+        "200":
+          description: "Success"
+          content:
+            "application/json":
+              schema:
+                $ref: '#/components/schemas/responseMessage'
+        "400":
+          $ref: '#/components/schemas/badRequest'
+        "401":
+          $ref: '#/components/schemas/unauthorized'
+        "404":
+          $ref: '#/components/schemas/notFound'
+
+
+  "/parkinglots/{id}/lanes":
+    "get":
+      tags: ["Parking Lot"]
+      summary: "Returns a list of all lanes that belong to the parking lot matching the given Id."
+      description: ""
+      operationId: "GetLanesByParkingLot"
+      
+      parameters:
+      - name: "id"
+        in: path
+        description: "Id of the parent parking lot."
+        required: true
+        schema:
+          type: string
+
+      responses:
+        "200":
+          description: "Success"
+          content:
+            "application/json":
+              schema:
+                $ref: '#/components/schemas/lanes'
+        "400":
+          $ref: '#/components/schemas/badRequest'
+        "401":
+          $ref: '#/components/schemas/unauthorized'
+        "404":
+          $ref: '#/components/schemas/notFound'
+          
+          
+  "/parkinglots/{id}/sensors":
+    "get":
+      tags: ["Parking Lot"]
+      summary: "Returns a list of all sensors that belong to the parking lot matching the given Id."
+      description: ""
+      operationId: "GetSensorsByParkingLot"
+      
+      parameters:
+      - name: "id"
+        in: path
+        description: "Id of the parent parking lot."
+        required: true
+        schema:
+          type: string
+      
+      - $ref: "#/components/parameters/sensorState"
+      - $ref: "#/components/parameters/sensorType"
+          
+      responses:
+        "200":
+          description: "Success"
+          content:
+            "application/json":
+              schema:
+                $ref: '#/components/schemas/sensors'
+        "400":
+          $ref: '#/components/schemas/badRequest'
+        "401":
+          $ref: '#/components/schemas/unauthorized'
+        "404":
+          $ref: '#/components/schemas/notFound'
+          
+  "/parkinglots/{id}/sensorlogs":
+      "get":
+        tags: ["Parking Lot"]
+        summary: "Get PlacePod history by date range for all sensors in a parking lot matching the given Id."
+        description: " - Logs will be returned in descending order.\n - Default filters are a starting time of 4 hours ago, an ending time of now, and a limit of 100 logs.\n - A maximum of 1,000 logs can be returned at once."
+        operationId: "GetSensorLogsByParkingLot"
+        
+        parameters:
+        - name: "id"
+          in: path
+          description: "Id of the parking lot to get logs for."
+          required: true
+          schema:
+            type: string
+        - $ref: "#/components/parameters/sensorLogStartTime"
+        - $ref: "#/components/parameters/sensorLogEndTime"
+        - $ref: "#/components/parameters/sensorLogLimit"
+            
+        responses:
+          "200":
+            description: "Success"
+            content:
+              "application/json":
+                schema:
+                  $ref: '#/components/schemas/sensorLogs'
+          "400":
+            $ref: '#/components/schemas/badRequest'
+          "401":
+            $ref: '#/components/schemas/unauthorized'
+          "404":
+            $ref: '#/components/schemas/notFound'
+
+# -- End ParkingLot
+
+
+# -- Start Sensors --     
+  "/sensors":
+    "get":
+      tags: ["Sensor"]
+      summary: "Returns a list of sensors."
+      description: ""
+      operationId: "GetSensors"
+      
+      parameters:
+      - $ref: "#/components/parameters/sensorState"
+      - $ref: "#/components/parameters/sensorType"
+
+      responses:
+        "200":
+          description: "Success"
+          content:
+            "application/json":
+              schema:
+                $ref: '#/components/schemas/sensors'
+        "400":
+          $ref: '#/components/schemas/badRequest'
+        "401":
+          $ref: '#/components/schemas/unauthorized'
+    
+    
+    "post":
+      tags: ["Sensor"]
+      summary: "Create a new sensor."
+      description: ""
+      operationId: "CreateSensor"
+      
+      requestBody:
+        content:
+          "application/json":
+            schema:
+              $ref: '#/components/schemas/createSensor'
+      
+      responses:
+        "200":
+          description: "Success"
+          content:
+            "application/json":
+              schema:
+                $ref: '#/components/schemas/createResponse'
+        "400":
+          $ref: '#/components/schemas/badRequest'
+        "401":
+          $ref: '#/components/schemas/unauthorized'
+
+
+  "/sensors/{id}":
+    "get":
+      tags: ["Sensor"]
+      summary: "Returns the sensor matching the given Id."
+      description: ""
+      operationId: "GetSensor"
+      
+      parameters:
+      - name: "id"
+        in: path
+        description: "Id of the sensor to get."
+        required: true
+        schema:
+          type: string
+          pattern: "^[A-Fa-f0-9]{16}$"
+          
+      responses:
+        "200":
+          description: "Success"
+          content:
+            "application/json":
+              schema:
+                $ref: '#/components/schemas/sensor'
+        "400":
+          $ref: '#/components/schemas/badRequest'
+        "401":
+          $ref: '#/components/schemas/unauthorized'
+        "404":
+          $ref: '#/components/schemas/notFound'
+          
+          
+    "put":
+      tags: ["Sensor"]
+      summary: "Update the sensor matching the given Id."
+      description: ""
+      operationId: "UpdateSensor"
+      
+      parameters:
+      - name: "id"
+        in: path
+        description: "Id of the sensor to update."
+        required: true
+        schema:
+          type: string
+          pattern: "^[A-Fa-f0-9]{16}$"
+      
+      requestBody:
+        content:
+          "application/json":
+            schema:
+              $ref: '#/components/schemas/updateSensor'
+        
+      responses:
+        "200":
+          description: "Success"
+          content:
+            "application/json":
+              schema:
+                $ref: '#/components/schemas/responseMessage'
+        "400":
+          $ref: '#/components/schemas/badRequest'
+        "401":
+          $ref: '#/components/schemas/unauthorized'
+        "404":
+          $ref: '#/components/schemas/notFound'
+  
+  
+    "delete":
+      tags: ["Sensor"]
+      summary: "Delete the sensor matching the given Id."
+      description: ""
+      operationId: "DeleteSensor"
+      
+      parameters:
+      - name: "id"
+        in: path
+        description: "Id of the sensor to delete."
+        required: true
+        schema:
+          type: string
+          pattern: "^[A-Fa-f0-9]{16}$"
+          
+      responses:
+        "200":
+          description: "Success"
+          content:
+            "application/json":
+              schema:
+                $ref: '#/components/schemas/responseMessage'
+        "400":
+          $ref: '#/components/schemas/badRequest'
+        "401":
+          $ref: '#/components/schemas/unauthorized'
+        "404":
+          $ref: '#/components/schemas/notFound'
+          
+          
+  "/sensors/{id}/uplink":
+    "post":
+      tags: ["Sensor"]
+      summary: "Submit a new uplink request for the sensor matching the given id."
+      description: "This will do the following with the provided information and decoded payload:\n - Updates the internal state of the sensor.\n - Creates a new sensor log."
+      operationId: "UplinkSensor"
+      
+      parameters:
+      - name: "id"
+        in: path
+        description: "Id of the sensor to submit an uplink for."
+        required: true
+        schema:
+          type: string
+          pattern: "^[A-Fa-f0-9]{16}$"
+      
+      requestBody:
+        content:
+          "application/json":
+            schema:
+              $ref: '#/components/schemas/uplinkReq'
+              
+      responses:
+        "200":
+          description: "Success"
+          content:
+            "application/json":
+              schema:
+                $ref: '#/components/schemas/responseMessage'
+        "400":
+          $ref: '#/components/schemas/badRequest'
+        "401":
+          $ref: '#/components/schemas/unauthorized'
+        "404":
+          $ref: '#/components/schemas/notFound'
+          
+          
+  "/sensors/uplink/ttn":
+    "post":
+      tags: ["Sensor"]
+      summary: "Submit a new TTN uplink request for the sensor matching the given id."
+      description: "Endpoint specifically for \"The Things Network\" (TTN). Additional fields are ok but will not be processed. This will do the following with the provided information and decoded payload:\n - Updates the internal state of the sensor.\n - Creates a new sensor log."
+      operationId: "UplinkSensorTtn"
+
+      requestBody:
+        content:
+          "application/json":
+            schema:
+              $ref: '#/components/schemas/uplinkReq-ttn'
+              
+      responses:
+        "200":
+          description: "Success"
+          content:
+            "application/json":
+              schema:
+                $ref: '#/components/schemas/responseMessage'
+        "400":
+          $ref: '#/components/schemas/badRequest'
+        "401":
+          $ref: '#/components/schemas/unauthorized'
+        "404":
+          $ref: '#/components/schemas/notFound'
+          
+  "/sensors/uplink/machineq":
+    "post":
+      tags: ["Sensor"]
+      summary: "Submit a new MachineQ uplink request for the sensor matching the given id."
+      description: "Endpoint specifically for \"Comcast MachineQ\". Additional fields are ok but will not be processed. This will do the following with the provided information and decoded payload:\n - Updates the internal state of the sensor.\n - Creates a new sensor log."
+      operationId: "UplinkSensorMachineQ"
+
+      requestBody:
+        content:
+          "application/json":
+            schema:
+              $ref: '#/components/schemas/uplinkReq-machineq'
+              
+      responses:
+        "200":
+          description: "Success"
+          content:
+            "application/json":
+              schema:
+                $ref: '#/components/schemas/responseMessage'
+        "400":
+          $ref: '#/components/schemas/badRequest'
+        "401":
+          $ref: '#/components/schemas/unauthorized'
+        "404":
+          $ref: '#/components/schemas/notFound'
+          
+  "/sensors/uplink/loriot":
+    "post":
+      tags: ["Sensor"]
+      summary: "Submit a new Loriot uplink request for the sensor matching the given id."
+      description: "Endpoint specifically for \"Loriot\". Additional fields are ok but will not be processed. This will do the following with the provided information and decoded payload:\n - Updates the internal state of the sensor.\n - Creates a new sensor log."
+      operationId: "UplinkSensorLoriot"
+
+      requestBody:
+        content:
+          "application/json":
+            schema:
+              $ref: '#/components/schemas/uplinkReq-loriot'
+              
+      responses:
+        "200":
+          description: "Success"
+          content:
+            "application/json":
+              schema:
+                $ref: '#/components/schemas/responseMessage'
+        "400":
+          $ref: '#/components/schemas/badRequest'
+        "401":
+          $ref: '#/components/schemas/unauthorized'
+        "404":
+          $ref: '#/components/schemas/notFound'
+          
+  "/sensors/{id}/sensorlogs":
+    "get":
+      tags: ["Sensor"]
+      summary: "Get PlacePod history by date range for a single sensor matching the given Id."
+      description: " - Logs will be returned in descending order.\n - Default filters are a starting time of 4 hours ago, an ending time of now, and a limit of 100 logs.\n - A maximum of 1,000 logs can be returned at once."
+      operationId: "GetSensorLogsBySensor"
+      
+      parameters:
+      - name: "id"
+        in: path
+        description: "Id of the sensor to get logs for."
+        required: true
+        schema:
+          type: string
+          pattern: "^[A-Fa-f0-9]{16}$"
+      - $ref: "#/components/parameters/sensorLogStartTime"
+      - $ref: "#/components/parameters/sensorLogEndTime"
+      - $ref: "#/components/parameters/sensorLogLimit"
+          
+      responses:
+        "200":
+          description: "Success"
+          content:
+            "application/json":
+              schema:
+                $ref: '#/components/schemas/sensorLogs'
+        "400":
+          $ref: '#/components/schemas/badRequest'
+        "401":
+          $ref: '#/components/schemas/unauthorized'
+        "404":
+          $ref: '#/components/schemas/notFound'
+
+# -- End Sensors --
+
+# -- Start Sensor Logs --
+  "/sensorlogs":
+    "get":
+      tags: ["Sensor Log"]
+      summary: "Get PlacePod history by date range for all sensors."
+      description: " - Logs will be returned in descending order.\n - Default filters are a starting time of 4 hours ago, an ending time of now, and a limit of 100 logs.\n - A maximum of 1,000 logs can be returned at once."
+      
+      parameters:
+      - $ref: "#/components/parameters/sensorLogStartTime"
+      - $ref: "#/components/parameters/sensorLogEndTime"
+      - $ref: "#/components/parameters/sensorLogLimit"
+          
+      responses:
+        "200":
+          description: "Success"
+          content:
+            "application/json":
+              schema:
+                $ref: '#/components/schemas/sensorLogs'
+        "400":
+          $ref: '#/components/schemas/badRequest'
+        "401":
+          $ref: '#/components/schemas/unauthorized'
+
+# -- End Sensor Logs --
+    
+
+# Define objects.
+components:
+  # Parameter/response objects.
+  schemas:
+  
+    # --- Parameters ---
+    
+    "createLane":
+      title: "Create Lane"
+      description: "Fields for creating a new lane."
+      type: object
+      properties:
+        "name":
+          type: string
+          description: "The name of the lane."
+        "frontId":
+          type: string
+          description: "Id of the sensor in the front position."
+          pattern: "^[A-Fa-f0-9]{16}$"
+        "backId":
+          type: string
+          description: "Id of the sensor in the back position."
+          pattern: "^[A-Fa-f0-9]{16}$"
+        "parkingLotId":
+          type: string
+          description: "Id of the Parking Lot that this is associated to."
+        "direction":
+          type: boolean
+          description: "Is this lane going into or out of the parking lot?\n\ntrue = in, false = out."
+        "count":
+          type: number
+          format: uint32
+          description: "The initial number of vehicles. Defaults to 0 if excluded."
+      required: ["name", "frontId", "backId", "parkingLotId", "direction"]
+    
+    "createLot":
+      title: "Creating Parking Lot"
+      description: "Fields for creating a new parking lot."
+      type: object
+      properties:
+        "name":
+          type: string
+          description: "The name of the parking lot."
+        "totalSpaces":
+          type: number
+          format: uint32
+          description: "The number of parking spaces that the parking lot contains."
+        "count":
+          type: number
+          format: uint32
+          description: "The estimated number of vehicles in the parking lot at creation. Defaults to 0."
+      required: ["name"]
+  
+    "createSensor":
+      title: "Create Sensor"
+      description: "Fields for creating a new sensor."
+      type: object
+      properties:
+        "id":
+          type: string
+          description: "The unique Id of the sensor. This should match the serial number on the PlacePod unit."
+          pattern: "^[A-Fa-f0-9]{16}$"
+        "name":
+          type: string
+          description: "The name of the sensor."
+        "type":
+          type: string
+          description: "Put an enum here with like 'normal', 'vip', ect... Also say this defaults to x if not set."
+        "parkingLotId":
+          type: string
+          description: "Unique id of the parking lot that the sensor is in."
+      required: ["id", "name"]
+      
+    "updateLot":
+      title: "Update Parking Lot"
+      description: "Fields for updating a parking lot."
+      type: object
+      properties:
+        "name":
+          type: string
+          description: "The name of the parking lot."
+          
+        "totalSpaces":
+          type: number
+          format: uint32
+          description: "The number of parking spaces that the parking lot contains."
+        "count":
+          type: number
+          format: uint32
+          description: "The estimated number of vehicles in the parking lot."
+          
+    "updateLane":
+      title: "Update Lane"
+      description: "Fields for updating a lane."
+      type: object
+      properties:
+        "name":
+          type: string
+          description: "The name of the lane."
+          
+        "frontId":
+          type: string
+          description: "Id of the sensor in the front position."
+          pattern: "^[A-Fa-f0-9]{16}$"
+
+        "backId":
+          type: string
+          description: "Id of the sensor in the back position."
+          pattern: "^[A-Fa-f0-9]{16}$"
+          
+        "parkingLotId":
+          type: string
+          description: "Id of the Parking Lot that this is associated to."
+
+        "direction":
+          type: boolean
+          description: "Is this lane going into or out of the parking lot?\n\ntrue = in, false = out."
+          
+        "count":
+          type: number
+          format: uint32
+          description: "The initial number of vehicles. Defaults to 0 if excluded."
+        
+    "updateSensor":
+      title: "Update Sensor"
+      description: "Fields for updating a sensor."
+      type: object
+      properties:
+        "name":
+          type: string
+          description: "The name of the sensor."
+          
+        "type":
+          type: string
+          description: "Put an enum here with like 'normal', 'vip', ect... Also say this defaults to x if not set."
+
+        "parkingLotId":
+          type: string
+          description: "Unique id of the parking lot that the sensor is in."
+          
+    "uplinkReq":
+      title: "Uplink Request"
+      description: "Fields to be sent for an uplink request."
+      type: object
+      properties:
+        "payload":
+          type: string
+          description: "PlacePod payload in a hexidecimal string."
+          example: "026700A53700440302016D370045"
+        "port":
+          type: number
+          format: integer
+          minimum: 0
+          description: "The LoRa port the uplink was sent on. This will most likely be 3."
+          example: 3
+        "frameCount":
+          type: integer
+          format: uint32
+          description: "Current frame count from LoRa packet or network."
+        "rssi":
+          type: number
+          format: double
+          description: "Sensor's current RSSI (Received Signal Strength Indicator) reading."
+          example: -71
+        "snr":
+          type: number
+          format: double
+          description: "Sensor's current SNR (Signal to Noise Ratio) status."
+          example: 1.52
+        "gatewayId":
+          type: string
+          description: "Gateway's mac address."
+          example: "008000000000C3AF"
+        "gatewayTime":
+          type: string
+          format: date-time
+          description: "ISO timestamp from when the network received this event.\r\n\r\n- NOTE: If not provided then this will default to the time at which the PlacePod API receives the event."
+        "frequency":
+          type: number
+          format: double
+          description: "freq desc..."
+          example: 903.3
+        "dataRate":
+          type: string
+          description: "Takes Tx spreadfactor and Tx bandwidth"
+          example: "SF10BW125"
+      required: ["payload", "port"]
+
+    "uplinkReq-ttn":
+      title: "Uplink Request TTN"
+      description: "Fields to be sent for a TTN uplink request."
+      type: object
+      properties:
+        "dev_id":
+          type: string
+        "port":
+          type: number
+          format: integer
+          minimum: 0
+          description: "The LoRa port the uplink was sent on. This will most likely be 3."
+          example: 3
+        "counter":
+          type: integer
+          format: uint32
+          description: "Current frame count from LoRa packet or network."
+        "payload_raw":
+          type: string
+          description: "PlacePod payload in a base64 encoded string."
+        "metadata":
+          type: object
+          properties:
+            "frequency":
+              type: number
+            "data_rate":
+              type: string
+            "gateways":
+              type: array
+              items:
+                type: object
+                properties:
+                  "gtw_id":
+                    type: string
+                  "time":
+                    type: string
+                    format: date-time
+                  "rssi":
+                    type: number
+                  "snr":
+                    type: number
+      required: ["dev_id", "payload_raw", "port"]
+      
+    "uplinkReq-machineq":
+      title: "Uplink Request MachineQ"
+      description: "Fields to be sent for a MachineQ uplink request."
+      type: object
+      properties:
+        "Time":
+          type: string
+          format: date-time
+        "DevEUI":
+          type: string
+        "FPort":
+          type: number
+          format: integer
+          minimum: 0
+          description: "The LoRa port the uplink was sent on. This will most likely be 3."
+          example: 3
+        "FCntUp":
+          type: integer
+          format: uint32
+          description: "Current frame count from LoRa packet or network."
+        "payload_hex":
+          type: string
+          description: "PlacePod payload in a hexidecimal string."
+        "GatewayRSSI":
+          type: number
+        "GatewaySNR":
+          type: number
+        "SpreadingFactor":
+          type: string
+        "GatewayID":
+          type: string
+      required: ["DevEUI", "FPort", "payload_hex"]
+      
+    "uplinkReq-loriot":
+      title: "Uplink Request Loriot"
+      description: "Fields to be sent for a Loriot uplink request."
+      type: object
+      properties:
+        "EUI":
+          type: string
+        "ts":
+          type: number
+        "fcnt":
+          type: integer
+          format: uint32
+          description: "Current frame count from LoRa packet or network."
+        "port":
+          type: number
+          format: integer
+          minimum: 0
+          description: "The LoRa port the uplink was sent on. This will most likely be 3."
+          example: 3
+        "data":
+          type: string
+          description: "PlacePod payload in a hexidecimal string."
+        "freq":
+          type: number
+        "dr":
+          type: string
+        "rssi":
+          type: number
+        "snr":
+          type: number
+      required: ["EUI", "port", "data"]
+
+    # --- Responses ---
+    
+    "responseMessage":
+      title: "Response Message"
+      type: object
+      properties:
+        "message":
+          type: string
+          description: "Response message from the server."
+          
+    "createResponse":
+      title: "Create Response"
+      type: object
+      properties:
+        "id":
+          type: string
+          description: The id of the newly created object.
+          
+    "lane":
+      title: "Lane"
+      type: object
+      properties:
+        "id":
+          type: string
+          description: "Unique id of the lane."
+        "name":
+          type: string
+          description: "The name of the lane."
+        "frontId":
+          type: string
+          description: "Id of the Sensor in the front position."
+          pattern: "^[A-Fa-f0-9]{16}$"
+        "backId":
+          type: string
+          description: "Id of the Sensor in the back position."
+          pattern: "^[A-Fa-f0-9]{16}$"
+        "parkingLotId":
+          type: string
+          description: "Id of the Parking Lot that this is associated to."
+        "direction":
+          type: boolean
+          description: "Is this lane going into or out of the parking lot?\n\ntrue = in, false = out."
+        "count":
+          type: number
+          format: uint32
+          description: "The last estimated count of vehicles that this Lane has recorded."
+  
+    "lanes":
+      title: "Lanes"
+      type: array
+      uniqueItems: true
+      items:
+        $ref: '#/components/schemas/lane'
+          
+    "parkingLot":
+      title: "Parking Lot"
+      type: object
+      properties:
+        "id":
+          type: string
+          description: "Unique id of the parking lot."
+        "name":
+          type: string
+          description: "The name of the parking lot."
+        "totalSpaces":
+          type: number
+          format: uint32
+          description: "The number of parking spaces that the parking lot contains."
+        "count":
+          type: number
+          format: uint32
+          description: "The estimated number of vehicles in the lot. This is calculated *ONLY* using vehicle counting sensors. This defaults to 0."
+  
+    "parkingLots":
+      title: "Parking Lots"
+      type: array
+      uniqueItems: true
+      items:
+        $ref: '#/components/schemas/parkingLot'
+          
+    "sensor":
+      title: "Sensor"
+      type: object
+      properties:
+        "id":
+          type: string
+          description: "Unique Sensor ID. This should match the serial number on the PlacePod unit."
+        "name":
+          type: string
+          description: "Name of the sensor/parking spot."
+        "type":
+          type: string
+          description: "User set sensor type."
+        "parkingLotId":
+          type: string
+          description: "Unique id of the parking lot that the sensor is in."
+        "mode":
+          type: string
+          description: "What type of mode the sensor reports. Currently two possibilities:\n - \"Presence\"\n - \"Counter\""
+        "status":
+          type: number
+          format: uint8
+          description: "The current status of the sensor.\n\n If mode is \"Presence\":\n - Status indicates if a car is detected.\n - 0 = No Car Present (Vacant).\n - 1 = Parked Car Detected (Occupied).\n\n If mode is \"Counter\":\n - Status is the last recorded vehicle count.\n - Values range from [0, 128].\n - If the last value was 127, then the next value will roll over to 0.\n - A value of 128 indicates that the PlacePod has been recalibrated or rebooted and has an internal count of 0."
+        "temperature":
+          type: number
+          format: double
+          description: "Temperature in Celsius."
+        "battery":
+          type: number
+          format: double
+          description: "Battery Voltage."
+        "rssi":
+          type: number
+          format: double
+          description: "Sensor’s current RSSI status."
+        "snr":
+          type: number
+          format: double
+          description: "Sensor’s current SNR status."
+        "serverTime":
+          type: string
+          format: date-time
+          description: "Time the last event was received in UTC.\n - This will represent the last time this sensor saw an uplink message."
+        "gatewayTime":
+          type: string
+          format: date-time
+          description: "Time from gateway. This may not be accurate since gateway may have clock skew and/or incorrect time settings."
+          
+    "sensors":
+      title: "Sensors"
+      type: array
+      uniqueItems: true
+      items:
+        $ref: '#/components/schemas/sensor'
+        
+    "sensorLog":
+      title: "Sensor Log"
+      type: object
+      properties:
+        "sensorId":
+          type: string
+          pattern: "^[A-Fa-f0-9]{16}$"
+          description: "Unique Sensor ID. This should match the serial number on the PlacePod unit."
+        "mode":
+          type: string
+          description: "The type of mode the sensor reported. Currently two possibilities:\n - \"Presence\"\n - \"Counter\""
+        "status":
+          type: number
+          format: uint8
+          description: "The status of the sensor.\n\n If mode is \"Presence\":\n - Status indicates if a car is detected.\n - 0 = No Car Present (Vacant).\n - 1 = Parked Car Detected (Occupied).\n\n If mode is \"Counter\":\n - Status is current vehicle count.\n - Values range from [0, 128].\n - If the last value was 127, then the next value will roll over to 0.\n - A value of 128 indicates that the PlacePod has been recalibrated or rebooted and has an internal count of 0."
+        "keepAlive":
+          type: boolean
+          description: "Was the log a keep alive message?"
+        "temperature":
+          type: number
+          format: double
+          description: "Temperature in Celsius.\n - This is set up once an hour only if it has changed by +/- 3.0°C, so this may be null."
+        "battery":
+          type: number
+          format: double
+          description: "Battery Voltage.\n - This is set up once an hour only if it has changed by +/- 0.01v, so this may be null."
+        "frameCount":
+          type: number
+          format: uint32
+          description: "The frame count of this message."
+        "rssi":
+          type: number
+          format: double
+          description: "Sensor’s current RSSI status."
+        "snr":
+          type: number
+          format: double
+          description: "Sensor’s current SNR status."
+        "serverTime":
+          type: string
+          format: date-time
+          description: "Time the event was received in UTC."
+        "gatewayTime":
+          type: string
+          format: date-time
+          description: "Time from gateway. This may not be accurate since gateway may have clock skew and/or incorrect time settings."
+
+    "sensorLogs":
+        title: "Sensor Logs"
+        type: array
+        uniqueItems: true
+        items:
+          $ref: '#/components/schemas/sensorLog'
+  
+    "tokenResponse":
+      title: "OAuth2 Token Response"
+      type: object
+      properties:
+        "token":
+          type: string
+          description: "The authentiction token."
+        "expiresAt":
+          type: string
+          format: date-time
+          description: "The time the token will expire at."
+        "type":
+          type: string
+          description: "Authentiction token type."
+          
+    "tokenInfo":
+      title: "OAuth2 Token Info"
+      type: object
+      properties:
+        "token":
+          type: string
+          description: "The authentication token."
+        "expiresAt":
+          type: string
+          format: date-time
+          description: "The time the token will expire at."
+        "type":
+          type: string
+          description: "Authentiction token type."
+        "clientId":
+          type: string
+          description: "The unique id of the client who owns this token."
+          
+
+    # --- Error types ---
+        
+    "badRequest":
+      title: "Bad Request"
+      description: "Bad Request"
+    "unauthorized":
+      title: "Unauthorized"
+      description: "Unauthorized"
+    "forbidden":
+      title: "Forbidden"
+      description: "Forbidden"
+    "notFound":
+      title: "Not Found"
+      description: "Not Found"
+      
+  parameters:
+    "sensorState":
+      name: "state"
+      in: query
+      description: "Filter for all sensors that are in the given state:\n * **Vacant**: presence sensors that currently do not detect a vehicle.\n * **Occupied**: presence sensors that currently detect a vehicle.\n * **Offline**: any sensors that haven't communicated within the last 24 hours."
+      schema:
+        type: string
+        enum: ["Vacant", "Occupied", "Offline"]
+        
+    "sensorType":
+      name: "type"
+      in: query
+      description: "Filter for sensors of the given type."
+      schema:
+        type: string
+        
+    "sensorLogStartTime":
+      name: "startTime"
+      in: query
+      description: "The starting date-time. Defaults to 4 hours ago."
+      example: "2018-12-17T00:00:00.000Z"
+      schema:
+        type: string
+        format: date-time
+        
+    "sensorLogEndTime":
+      name: "endTime"
+      in: query
+      description: "The end date-time. Defaults to now."
+      example: "2018-12-17T04:00:00.000Z"
+      schema:
+        type: string
+        format: date-time
+        
+    "sensorLogLimit":
+      name: "limit"
+      in: query
+      description: "Maximum number of logs to return. Defaults to 100. Cap is 1,000 logs."
+      example: 100
+      schema:
+        type: number
+        format: uint
+      
+
+  # Define what security looks like
+  securitySchemes:
+     "bearerToken":
+      type: http
+      description: "Authorization token to send with request."
+      scheme: bearer
+      bearerFormat: "Bearer 12345"

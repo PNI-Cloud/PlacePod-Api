@@ -1,0 +1,41 @@
+version: '3'
+
+services:
+  placepod-api:
+    # You must build this!
+    image: placepod-api
+    restart: always
+    ports:
+      - ${PORT}:${PORT}
+    environment:
+      - POSTGRES_CONNECTION=${POSTGRES_CONNECTION}
+      # - MONGODB_CONNECTION=${MONGODB_CONNECTION}
+      - PORT=${PORT}
+      - NODE_ENV=${NODE_ENV}
+      - CREATE_ADMIN=${CREATE_ADMIN}
+      - ADMIN_NAME=${ADMIN_NAME}
+      - ADMIN_EMAIL=${ADMIN_EMAIL}
+    depends_on:
+      # - postgres
+      # - mongodb
+
+  # postgres:
+  #   # https://hub.docker.com/_/postgres
+  #   image: postgres:12.0
+  #   restart: always
+  #   ports:
+  #     - "5432:5432"
+  #   environment:
+  #     - POSTGRES_USER=${POSTGRES_USER}
+  #     - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+  #     - POSTGRES_DB=${POSTGRES_DB}
+
+  # mongodb:
+  #   # https://hub.docker.com/_/mongo
+  #   image: mongo:4.2.1
+  #   restart: always
+  #   ports:
+  #     - "27017:27017"
+  #   environment:
+  #     - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME}
+  #     - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}

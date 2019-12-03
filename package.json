@@ -1,0 +1,42 @@
+{
+  "name": "placepod-api",
+  "version": "1.0.0",
+  "description": "Web API for PlacePod smart parking sensors.",
+  "main": "Server.js",
+  "scripts": {
+    "start": "node Server.js",
+    "test": "mocha"
+  },
+  "author": "Protonex LLC dba PNI Sensor",
+  "license": "GPL-3.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/PNI-Cloud/PlacePod-Api"
+  },
+  "dependencies": {
+    "@hapi/joi": "16.1.7",
+    "bcryptjs": "2.4.3",
+    "cayenne-lpp": "1.0.2",
+    "cors": "2.8.5",
+    "crypto-random-string": "3.0.1",
+    "express": "4.17.1",
+    "helmet": "3.21.1",
+    "oauth2-server": "3.0.1",
+    "pg": "7.12.1",
+    "swagger-ui-express": "4.1.2",
+    "yamljs": "0.3.0"
+  },
+  "devDependencies": {
+    "@types/hapi__joi": "16.0.1",
+    "chai": "4.2.0",
+    "eslint": "6.1.0",
+    "eslint-config-airbnb-base": "14.0.0",
+    "eslint-plugin-import": "2.18.2",
+    "eslint-plugin-node": "8.0.1",
+    "mocha": "6.2.0",
+    "mongodb": "3.3.3"
+  },
+  "engines": {
+    "node": ">=10.0.0"
+  }
+}
