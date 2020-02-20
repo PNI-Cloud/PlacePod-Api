@@ -104,9 +104,9 @@ To the `placepod-api` service.
 Then, add values like these to your `.env` file:
 
 ```sh
-POSTGRES_USER=pg_username
-POSTGRES_PASSWORD=pg_password
-POSTGRES_DB=pg_db
+POSTGRES_USER=username
+POSTGRES_PASSWORD=password
+POSTGRES_DB=db
 
-POSTGRES_CONNECTION=postgres://pg_username:pg_password@postgres/pg_db
+POSTGRES_CONNECTION=postgres://username:password@postgres/db
 ```

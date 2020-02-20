@@ -838,6 +838,33 @@ paths:
           $ref: '#/components/schemas/unauthorized'
         "404":
           $ref: '#/components/schemas/notFound'
+
+  "/sensors/uplink/chirpstack":
+    "post":
+      tags: ["Sensor"]
+      summary: "Submit a new ChirpStack uplink request for the sensor matching the given id."
+      description: "Endpoint specifically for \"ChirpStack\". Additional fields are ok but will not be processed. This will do the following with the provided information and decoded payload:\n - Updates the internal state of the sensor.\n - Creates a new sensor log."
+      operationId: "UplinkSensorChirpStack"
+
+      requestBody:
+        content:
+          "application/json":
+            schema:
+              $ref: '#/components/schemas/uplinkReq-chirpStack'
+              
+      responses:
+        "200":
+          description: "Success"
+          content:
+            "application/json":
+              schema:
+                $ref: '#/components/schemas/responseMessage'
+        "400":
+          $ref: '#/components/schemas/badRequest'
+        "401":
+          $ref: '#/components/schemas/unauthorized'
+        "404":
+          $ref: '#/components/schemas/notFound'
           
   "/sensors/{id}/sensorlogs":
     "get":
@@ -1094,8 +1121,9 @@ components:
       description: "Fields to be sent for a TTN uplink request."
       type: object
       properties:
-        "dev_id":
+        "hardware_serial":
           type: string
+          description: "The unique id of the sensor."
         "port":
           type: number
           format: integer
@@ -1112,6 +1140,9 @@ components:
         "metadata":
           type: object
           properties:
+            "time":
+              type: string
+              format: date-time
             "frequency":
               type: number
             "data_rate":
@@ -1123,14 +1154,11 @@ components:
                 properties:
                   "gtw_id":
                     type: string
-                  "time":
-                    type: string
-                    format: date-time
                   "rssi":
                     type: number
                   "snr":
                     type: number
-      required: ["dev_id", "payload_raw", "port"]
+      required: ["hardware_serial", "payload_raw", "port"]
       
     "uplinkReq-machineq":
       title: "Uplink Request MachineQ"
@@ -1196,6 +1224,43 @@ components:
         "snr":
           type: number
       required: ["EUI", "port", "data"]
+
+    "uplinkReq-chirpStack":
+      title: "Uplink Request ChirpStack"
+      description: "Fields to be sent for a ChirpStack uplink request."
+      type: object
+      properties:
+        "devEUI":
+          type: string
+        "rxInfo":
+          type: array
+          items:
+            type: object
+            properties:
+              "gatewayID":
+                type: string
+              "time":
+                type: string
+                format: date-time
+              "rssi":
+                type: number
+              "loRaSNR":
+                type: number
+        "txInfo":
+          type: object
+          properties:
+            "frequency":
+              type: number
+            "dr":
+              type: number
+        "fCnt":
+          type: number
+        "fPort":
+          type: number
+        "data":
+          type: string
+          description: "PlacePod payload in a base64 encoded string."
+      required: ["devEUI", "fPort", "data"]
 
     # --- Responses ---
     

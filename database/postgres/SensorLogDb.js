@@ -48,7 +48,7 @@ class SensorLogDb {
         let joinQuery = '';
 
         if (filters.sensorId) {
-            values.push(filters.sensorId);
+            values.push(filters.sensorId.toLowerCase());
             filterQuery += `AND sensor_id = $${values.length} `;
         }
 

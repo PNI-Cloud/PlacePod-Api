@@ -83,16 +83,16 @@ const uplinkBody = Joi.object()
 /** Body schema for submitting a TTN uplink. */
 const ttnBody = Joi.object()
     .keys({
-        dev_id: Joi.string().hex().length(16).required(),
+        hardware_serial: Joi.string().hex().length(16).required(),
         port: Joi.number().integer().positive().required(),
         counter: Joi.number().integer().positive().allow(0),
         payload_raw: Joi.string().base64().required(),
         metadata: Joi.object().keys({
+            time: Joi.date().iso().allow(''),
             frequency: Joi.number().positive().allow(0),
             data_rate: Joi.string(),
             gateways: Joi.array().items(Joi.object().keys({
                 gtw_id: Joi.string(),
-                time: Joi.date().iso(),
                 rssi: Joi.number(),
                 snr: Joi.number(),
             })),
@@ -125,6 +125,25 @@ const loriotBody = Joi.object()
         dr: Joi.string(),
         rssi: Joi.number(),
         snr: Joi.number(),
+    });
+
+/** Body schema for submitting a ChirpStack uplink. */
+const chirpStackBody = Joi.object()
+    .keys({
+        devEUI: Joi.string().hex().length(16).required(),
+        rxInfo: Joi.array().items(Joi.object().keys({
+            gatewayID: Joi.string(),
+            time: Joi.date().iso().allow(''),
+            rssi: Joi.number(),
+            loRaSNR: Joi.number(),
+        })),
+        txInfo: Joi.object().keys({
+            frequency: Joi.number().positive().allow(0),
+            dr: Joi.number(),
+        }),
+        fCnt: Joi.number(),
+        fPort: Joi.number().required(),
+        data: Joi.string().base64().required(),
     });
 
 /**
@@ -327,16 +346,16 @@ class SensorController {
     async uplinkTtn(caller, body) {
         /**
          * @type {{
-         *  dev_id: string,
+         *  hardware_serial: string,
          *  port: number,
          *  counter: number,
          *  payload_raw: string,
          *  metadata: {
+         *      time: string|Date,
          *      frequency: number,
          *      data_rate: string,
          *      gateways: [{
          *          gtw_id: string,
-         *          time: string|Date,
          *          rssi: number,
          *          snr: number,
          *      }],
@@ -351,19 +370,19 @@ class SensorController {
             throw new ApiError(`Invalid input: ${ex.message}.`, 400);
         }
 
-        const id = uplink.dev_id;
+        const id = uplink.hardware_serial;
         const uplinkPacket = {
             payload: Buffer.from(uplink.payload_raw, 'base64').toString('hex'),
             port: uplink.port,
             frameCount: uplink.counter,
             frequency: uplink.metadata.frequency,
             dataRate: uplink.metadata.data_rate,
+            gatewayTime: uplink.metadata.time,
         };
         if (uplink.metadata.gateways.length > 0) {
             uplinkPacket.rssi = uplink.metadata.gateways[0].rssi;
             uplinkPacket.snr = uplink.metadata.gateways[0].snr;
             uplinkPacket.gatewayId = uplink.metadata.gateways[0].gtw_id;
-            uplinkPacket.gatewayTime = uplink.metadata.gateways[0].time;
         }
 
         await UplinkService.process(caller, id, uplinkPacket);
@@ -455,6 +474,60 @@ class SensorController {
             frequency: uplink.freq / 1000000,
             dataRate: uplink.dr,
         };
+
+        await UplinkService.process(caller, id, uplinkPacket);
+        return new Response(`Uplink for '${id}' successfully processed.`);
+    }
+
+    /**
+     * Process an uplink from ChirpStack for the sensor that matches the given id.
+     * @param {Caller} caller : Info relating to the user making the request.
+     * @param {{}} body : Contains ChirpStack uplink info including raw payload and other fields.
+     * @public */
+    async uplinkChirpStack(caller, body) {
+        /**
+         * @type {{
+         *  devEUI: string,
+         *  rxInfo: [{
+         *      gatewayID: string,
+         *      time: string|Date,
+         *      rssi: number,
+         *      loRaSNR: number,
+         *  }],
+         *  txInfo: {
+         *      frequency: number,
+         *      dr: number,
+         *  },
+         *  fCnt: number,
+         *  fPort: number,
+         *  data: string,
+         * }}
+         */
+        let uplink;
+
+        try {
+            uplink = await chirpStackBody.validateAsync(body, { stripUnknown: true });
+        } catch (ex) {
+            throw new ApiError(`Invalid input: ${ex.message}.`, 400);
+        }
+
+        // Format the Loriot uplink, then send it for processing.
+        const id = uplink.devEUI;
+        const uplinkPacket = {
+            payload: Buffer.from(uplink.data, 'base64').toString('hex'),
+            port: uplink.fPort,
+            frameCount: uplink.fCnt,
+            frequency: uplink.txInfo.frequency / 1000000,
+            dataRate: `ChirpStack ${uplink.txInfo.dr}`,
+        };
+        if (uplink.rxInfo.length > 0) {
+            uplinkPacket.rssi = uplink.rxInfo[0].rssi;
+            uplinkPacket.snr = uplink.rxInfo[0].loRaSNR;
+            uplinkPacket.gatewayId = uplink.rxInfo[0].gatewayID;
+            if (uplink.rxInfo[0].time) {
+                uplinkPacket.gatewayTime = uplink.rxInfo[0].time;
+            }
+        }
 
         await UplinkService.process(caller, id, uplinkPacket);
         return new Response(`Uplink for '${id}' successfully processed.`);
