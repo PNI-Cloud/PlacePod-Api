@@ -18,7 +18,7 @@
 'use strict';
 
 /* Imports */
-const Joi = require('@hapi/joi');
+const Joi = require('joi');
 const { AccessTokenDb } = require('../../database');
 const { ApiError, Response } = require('../../models');
 const OAuthServer = require('../../lib/OAuthServer');

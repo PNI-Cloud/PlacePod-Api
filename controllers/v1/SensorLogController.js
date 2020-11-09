@@ -18,7 +18,7 @@
 'use strict';
 
 /* Imports */
-const Joi = require('@hapi/joi');
+const Joi = require('joi');
 const { ApiError } = require('../../models');
 const {
     LaneDb,

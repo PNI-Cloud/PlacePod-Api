@@ -725,7 +725,7 @@ paths:
     "post":
       tags: ["Sensor"]
       summary: "Submit a new uplink request for the sensor matching the given id."
-      description: "This will do the following with the provided information and decoded payload:\n - Updates the internal state of the sensor.\n - Creates a new sensor log."
+      description: "This will do the following with the provided information and decoded payload:\n - Updates the internal state of the sensor.\n - Creates a new sensor log.\n\nA new sensor will be created if one doesn't already exist with the given id."
       operationId: "UplinkSensor"
       
       parameters:
@@ -754,15 +754,13 @@ paths:
           $ref: '#/components/schemas/badRequest'
         "401":
           $ref: '#/components/schemas/unauthorized'
-        "404":
-          $ref: '#/components/schemas/notFound'
           
           
   "/sensors/uplink/ttn":
     "post":
       tags: ["Sensor"]
       summary: "Submit a new TTN uplink request for the sensor matching the given id."
-      description: "Endpoint specifically for \"The Things Network\" (TTN). Additional fields are ok but will not be processed. This will do the following with the provided information and decoded payload:\n - Updates the internal state of the sensor.\n - Creates a new sensor log."
+      description: "Endpoint specifically for \"The Things Network\" (TTN). Additional fields are ok but will not be processed.\n\nThis will do the following with the provided information and decoded payload:\n - Updates the internal state of the sensor.\n - Creates a new sensor log.\n\nA new sensor will be created if one doesn't already exist with the given **hardware_serial**."
       operationId: "UplinkSensorTtn"
 
       requestBody:
@@ -782,14 +780,12 @@ paths:
           $ref: '#/components/schemas/badRequest'
         "401":
           $ref: '#/components/schemas/unauthorized'
-        "404":
-          $ref: '#/components/schemas/notFound'
           
   "/sensors/uplink/machineq":
     "post":
       tags: ["Sensor"]
       summary: "Submit a new MachineQ uplink request for the sensor matching the given id."
-      description: "Endpoint specifically for \"Comcast MachineQ\". Additional fields are ok but will not be processed. This will do the following with the provided information and decoded payload:\n - Updates the internal state of the sensor.\n - Creates a new sensor log."
+      description: "Endpoint specifically for \"Comcast MachineQ\". Additional fields are ok but will not be processed.\n\nThis will do the following with the provided information and decoded payload:\n - Updates the internal state of the sensor.\n - Creates a new sensor log.\n\nA new sensor will be created if one doesn't already exist with the given **DevEUI**."
       operationId: "UplinkSensorMachineQ"
 
       requestBody:
@@ -809,14 +805,12 @@ paths:
           $ref: '#/components/schemas/badRequest'
         "401":
           $ref: '#/components/schemas/unauthorized'
-        "404":
-          $ref: '#/components/schemas/notFound'
           
   "/sensors/uplink/loriot":
     "post":
       tags: ["Sensor"]
       summary: "Submit a new Loriot uplink request for the sensor matching the given id."
-      description: "Endpoint specifically for \"Loriot\". Additional fields are ok but will not be processed. This will do the following with the provided information and decoded payload:\n - Updates the internal state of the sensor.\n - Creates a new sensor log."
+      description: "Endpoint specifically for \"Loriot\". Additional fields are ok but will not be processed.\n\nThis will do the following with the provided information and decoded payload:\n - Updates the internal state of the sensor.\n - Creates a new sensor log.\n\nA new sensor will be created if one doesn't already exist with the given **EUI**."
       operationId: "UplinkSensorLoriot"
 
       requestBody:
@@ -836,14 +830,12 @@ paths:
           $ref: '#/components/schemas/badRequest'
         "401":
           $ref: '#/components/schemas/unauthorized'
-        "404":
-          $ref: '#/components/schemas/notFound'
 
   "/sensors/uplink/chirpstack":
     "post":
       tags: ["Sensor"]
       summary: "Submit a new ChirpStack uplink request for the sensor matching the given id."
-      description: "Endpoint specifically for \"ChirpStack\". Additional fields are ok but will not be processed. This will do the following with the provided information and decoded payload:\n - Updates the internal state of the sensor.\n - Creates a new sensor log."
+      description: "Endpoint specifically for \"ChirpStack\". Additional fields are ok but will not be processed.\n\nThis will do the following with the provided information and decoded payload:\n - Updates the internal state of the sensor.\n - Creates a new sensor log.\n\nA new sensor will be created if one doesn't already exist with the given **devEUI**."
       operationId: "UplinkSensorChirpStack"
 
       requestBody:
@@ -863,8 +855,31 @@ paths:
           $ref: '#/components/schemas/badRequest'
         "401":
           $ref: '#/components/schemas/unauthorized'
-        "404":
-          $ref: '#/components/schemas/notFound'
+
+  "/sensors/uplink/senet":
+    "post":
+      tags: ["Sensor"]
+      summary: "Submit a new Senet uplink request for the sensor matching the given id."
+      description: "Endpoint specifically for \"Senet\". Additional fields are ok but will not be processed.\n\nThis will do the following with the provided information and decoded payload:\n - Updates the internal state of the sensor.\n - Creates a new sensor log.\n\nA new sensor will be created if one doesn't already exist with the given **devEUI**."
+      operationId: "UplinkSensorSenet"
+
+      requestBody:
+        content:
+          "application/json":
+            schema:
+              $ref: '#/components/schemas/uplinkReq-senet'
+
+      responses:
+        "200":
+          description: "Success"
+          content:
+            "application/json":
+              schema:
+                $ref: '#/components/schemas/responseMessage'
+        "400":
+          $ref: '#/components/schemas/badRequest'
+        "401":
+          $ref: '#/components/schemas/unauthorized'
           
   "/sensors/{id}/sensorlogs":
     "get":
@@ -1261,6 +1276,41 @@ components:
           type: string
           description: "PlacePod payload in a base64 encoded string."
       required: ["devEUI", "fPort", "data"]
+
+    "uplinkReq-senet":
+      title: "Uplink Request Senet"
+      description: "Fields to be sent for a Senet uplink request."
+      type: object
+      properties:
+        "devEui":
+          type: string
+        "gwEui":
+          type: string
+        "pdu":
+          type: string
+          description: "PlacePod payload in a hexidecimal string."
+        "port":
+          type: number
+          format: integer
+          minimum: 0
+          description: "The LoRa port the uplink was sent on. This will most likely be 3."
+          example: 3
+        "seqno":
+          type: integer
+          format: uint32
+          description: "Current frame count from LoRa packet or network."
+        "txtime":
+          type: string
+          format: date-time
+        "datarate":
+          type: number
+        "freq":
+          type: number
+        "rssi":
+          type: number
+        "snr":
+          type: number
+      required: ["devEui", "port", "pdu"]
 
     # --- Responses ---
     

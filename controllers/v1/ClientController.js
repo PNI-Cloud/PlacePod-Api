@@ -20,7 +20,7 @@
 /* Imports */
 const bcrypt = require('bcryptjs');
 const cryptoRandomString = require('crypto-random-string');
-const Joi = require('@hapi/joi');
+const Joi = require('joi');
 const { ApiError, Response } = require('../../models');
 const { ClientDb } = require('../../database');
 const ScopeManager = require('../../lib/ScopeManager');

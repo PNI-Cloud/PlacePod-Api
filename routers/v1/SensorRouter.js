@@ -80,6 +80,11 @@ module.exports = () => {
             .then((result) => res.json(result))
             .catch((ex) => next(ex));
     });
+    router.post('/uplink/senet', (req, res, next) => {
+        SensorController.uplinkSenet(res.locals.caller, req.body)
+            .then((result) => res.json(result))
+            .catch((ex) => next(ex));
+    });
 
     router.get('/:id/sensorlogs', (req, res, next) => {
         SensorLogController.getBySensor(res.locals.caller, req.params, req.query)

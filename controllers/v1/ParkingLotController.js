@@ -18,7 +18,7 @@
 'use strict';
 
 /* Imports */
-const Joi = require('@hapi/joi');
+const Joi = require('joi');
 const { ApiError, Response } = require('../../models');
 const { LaneDb, ParkingLotDb, SensorDb } = require('../../database');
 /** @typedef {import('../../models/Caller')} Caller */

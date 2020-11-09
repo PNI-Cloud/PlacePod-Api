@@ -18,7 +18,7 @@
 'use strict';
 
 /* Imports */
-const Joi = require('@hapi/joi');
+const Joi = require('joi');
 const { ApiError, Response, Sensor } = require('../../models');
 const { LaneDb, ParkingLotDb, SensorDb } = require('../../database');
 const UplinkService = require('../../lib/UplinkService');
@@ -145,6 +145,21 @@ const chirpStackBody = Joi.object()
         fPort: Joi.number().required(),
         data: Joi.string().base64().required(),
     });
+
+    /** Body schema for submitting a Senet uplink. */
+    const senetBody = Joi.object()
+        .keys({
+            devEui: Joi.string().hex().length(16).required(),
+            gwEui: Joi.string(),
+            pdu: Joi.string().hex().required(),
+            port: Joi.number().required(),
+            seqno: Joi.number(),
+            txtime: Joi.date().iso().allow(''),
+            datarate: Joi.number(),
+            freq: Joi.number(),
+            rssi: Joi.number(),
+            snr: Joi.number(),
+        });
 
 /**
  * Expose endpoints for managing the 'sensor' resource.
@@ -333,6 +348,7 @@ class SensorController {
         } catch (ex) {
             throw new ApiError(`Invalid input: ${ex.message}.`, 400);
         }
+        uplink.network = 'Generic';
 
         await UplinkService.process(caller, id, uplink);
         return new Response(`Uplink for '${id}' successfully processed.`);
@@ -378,6 +394,7 @@ class SensorController {
             frequency: uplink.metadata.frequency,
             dataRate: uplink.metadata.data_rate,
             gatewayTime: uplink.metadata.time,
+            network: 'TTN',
         };
         if (uplink.metadata.gateways.length > 0) {
             uplinkPacket.rssi = uplink.metadata.gateways[0].rssi;
@@ -428,6 +445,7 @@ class SensorController {
             gatewayTime: uplink.Time,
             frequency: null,
             dadtaRate: `SF${uplink.SpreadingFactor}`,
+            network: 'MachineQ',
         };
 
         await UplinkService.process(caller, id, uplinkPacket);
@@ -473,6 +491,7 @@ class SensorController {
             gatewayTime: new Date(uplink.ts).toISOString(),
             frequency: uplink.freq / 1000000,
             dataRate: uplink.dr,
+            network: 'Loriot',
         };
 
         await UplinkService.process(caller, id, uplinkPacket);
@@ -519,6 +538,7 @@ class SensorController {
             frameCount: uplink.fCnt,
             frequency: uplink.txInfo.frequency / 1000000,
             dataRate: `ChirpStack ${uplink.txInfo.dr}`,
+            network: 'ChirpStack',
         };
         if (uplink.rxInfo.length > 0) {
             uplinkPacket.rssi = uplink.rxInfo[0].rssi;
@@ -528,6 +548,53 @@ class SensorController {
                 uplinkPacket.gatewayTime = uplink.rxInfo[0].time;
             }
         }
+
+        await UplinkService.process(caller, id, uplinkPacket);
+        return new Response(`Uplink for '${id}' successfully processed.`);
+    }
+
+    /**
+     * Process an uplink from Senet for the sensor that matches the given id.
+     * @param {Caller} caller : Info relating to the user making the request.
+     * @param {{}} body : Contains Senet uplink info including raw payload and other fields.
+     * @public */
+    async uplinkSenet(caller, body) {
+        /**
+         * @type {{
+         *  devEui: string,
+         *  gwEui: string,
+         *  pdu: string,
+         *  port: number,
+         *  seqno: number,
+         *  txtime: string,
+         *  datarate: number,
+         *  freq: number,
+         *  rssi: number,
+         *  snr: number,
+         * }}
+        */
+        let uplink;
+
+        try {
+            uplink = await senetBody.validateAsync(body, { stripUnknown: true });
+        } catch (ex) {
+            throw new ApiError(`Invalid input: ${ex.message}.`, 400);
+        }
+
+        // Format the Loriot uplink, then send it for processing.
+        const id = uplink.devEui;
+        const uplinkPacket = {
+            payload: uplink.pdu,
+            port: uplink.port,
+            frameCount: uplink.seqno,
+            rssi: uplink.rssi,
+            snr: uplink.snr,
+            gatewayId: uplink.gwEui,
+            gatewayTime: uplink.txtime,
+            frequency: uplink.freq,
+            dataRate: `Senet ${uplink.datarate}`,
+            network: 'Senet',
+        };
 
         await UplinkService.process(caller, id, uplinkPacket);
         return new Response(`Uplink for '${id}' successfully processed.`);
